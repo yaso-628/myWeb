@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.myweb.mapper.BlogMapper">
+    <resultMap id="BaseResultMap" type="com.myweb.model.Blog">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="summary" property="summary"/>
+        <result column="content" property="content"/>
+        <result column="cover" property="cover"/>
+        <result column="category" property="category"/>
+        <result column="tags" property="tags"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="status" property="status"/>
+        <result column="author_id" property="authorId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="publish_time" property="publishTime"/>
+    </resultMap>
+    <sql id="Base_Column_List">id, title, summary, content, cover, category, tags, view_count, status, author_id, create_time, update_time, publish_time</sql>
+    <select id="selectById" resultMap="BaseResultMap">SELECT <include refid="Base_Column_List"/> FROM blog WHERE id = #{id}</select>
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM blog
+        <where>
+            <if test="status != null"><![CDATA[ AND status = #{status} ]]></if>
+            <if test="category != null and category != ''"><![CDATA[ AND category = #{category} ]]></if>
+        </where>
+        ORDER BY id DESC LIMIT #{offset}, #{limit}
+    </select>
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM blog
+        <where>
+            <if test="status != null"><![CDATA[ AND status = #{status} ]]></if>
+            <if test="category != null and category != ''"><![CDATA[ AND category = #{category} ]]></if>
+        </where>
+    </select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO blog (title, summary, content, cover, category, tags, view_count, status, author_id, create_time, update_time, publish_time)
+        VALUES (#{title}, #{summary}, #{content}, #{cover}, #{category}, #{tags}, #{viewCount}, #{status}, #{authorId}, #{createTime}, #{updateTime}, #{publishTime})
+    </insert>
+    <update id="updateById">
+        UPDATE blog SET title=#{title}, summary=#{summary}, content=#{content}, cover=#{cover}, category=#{category}, tags=#{tags}, status=#{status}, update_time=#{updateTime}, publish_time=#{publishTime} WHERE id=#{id}
+    </update>
+    <delete id="deleteById">DELETE FROM blog WHERE id = #{id}</delete>
+    <update id="incrementViewCount">UPDATE blog SET view_count = IFNULL(view_count,0) + 1 WHERE id = #{id}</update>
+</mapper>

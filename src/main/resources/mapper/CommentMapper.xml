@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.myweb.mapper.CommentMapper">
+    <resultMap id="BaseResultMap" type="com.myweb.model.Comment">
+        <id column="id" property="id"/>
+        <result column="blog_id" property="blogId"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="user_id" property="userId"/>
+        <!--
+            昵称规则：
+            - 如果是登录用户发表评论（user_id 不为空），优先使用 user.nickname，确保修改个人资料后，评论区昵称同步更新。
+            - 否则（游客/未绑定用户），使用评论表自身存的 nickname。
+        -->
+        <result column="nickname" property="nickname"/>
+        <result column="email" property="email"/>
+        <result column="content" property="content"/>
+        <result column="status" property="status"/>
+        <result column="ip" property="ip"/>
+        <result column="create_time" property="createTime"/>
+        <result column="avatar" property="avatar"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        c.id,
+        c.blog_id,
+        c.parent_id,
+        c.user_id,
+        CASE WHEN c.user_id IS NOT NULL THEN u.nickname ELSE c.nickname END AS nickname,
+        c.email,
+        c.content,
+        c.status,
+        c.ip,
+        c.create_time,
+        u.avatar AS avatar
+    </sql>
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM comment c
+        LEFT JOIN user u ON c.user_id = u.id
+        WHERE c.id = #{id}
+    </select>
+    <select id="selectByBlogId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM comment c
+        LEFT JOIN user u ON c.user_id = u.id
+        WHERE c.blog_id = #{blogId}
+        <if test="status != null"><![CDATA[ AND c.status = #{status} ]]></if>
+        ORDER BY c.create_time ASC
+    </select>
+    <select id="selectGuestbook" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM comment c
+        LEFT JOIN user u ON c.user_id = u.id
+        WHERE (c.blog_id IS NULL OR c.blog_id = 0)
+        <if test="status != null"><![CDATA[ AND c.status = #{status} ]]></if>
+        ORDER BY c.create_time DESC LIMIT #{offset}, #{limit}
+    </select>
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM comment c
+        LEFT JOIN user u ON c.user_id = u.id
+        <where>
+            <if test="blogId != null"><![CDATA[ AND c.blog_id = #{blogId} ]]></if>
+            <if test="status != null"><![CDATA[ AND c.status = #{status} ]]></if>
+        </where>
+        ORDER BY c.create_time DESC LIMIT #{offset}, #{limit}
+    </select>
+    <select id="countByBlogId" resultType="long">
+        SELECT COUNT(*) FROM comment WHERE blog_id = #{blogId}
+        <if test="status != null"><![CDATA[ AND status = #{status} ]]></if>
+    </select>
+    <select id="countGuestbook" resultType="long">
+        SELECT COUNT(*) FROM comment WHERE (blog_id IS NULL OR blog_id = 0)
+        <if test="status != null"><![CDATA[ AND status = #{status} ]]></if>
+    </select>
+    <select id="countList" resultType="long">
+        SELECT COUNT(*) FROM comment
+        <where>
+            <if test="blogId != null"><![CDATA[ AND blog_id = #{blogId} ]]></if>
+            <if test="status != null"><![CDATA[ AND status = #{status} ]]></if>
+        </where>
+    </select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO comment (blog_id, parent_id, user_id, nickname, email, content, status, ip, create_time)
+        VALUES (#{blogId}, #{parentId}, #{userId}, #{nickname}, #{email}, #{content}, #{status}, #{ip}, #{createTime})
+    </insert>
+    <update id="updateStatus">UPDATE comment SET status = #{status} WHERE id = #{id}</update>
+    <delete id="deleteById">DELETE FROM comment WHERE id = #{id}</delete>
+</mapper>

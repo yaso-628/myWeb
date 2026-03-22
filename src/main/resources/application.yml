@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: personal-web
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+  sql:
+    init:
+      mode: always
+  datasource:
+    url: jdbc:mysql://localhost:3306/myweb?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: Admin@123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  #data:
+    #redis:
+      #host: localhost
+      #port: 6379
+      #password:
+      #database: 0
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.myweb.model
+  configuration:
+    map-underscore-to-camel-case: true
+
+app:
+  jwt:
+    secret: myweb-default-secret-key-at-least-256-bits-for-hs256
+    expiration: 86400000
+
+server:
+  port: 8080

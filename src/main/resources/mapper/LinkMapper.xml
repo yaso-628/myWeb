@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.myweb.mapper.LinkMapper">
+    <resultMap id="BaseResultMap" type="com.myweb.model.Link">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="url" property="url"/>
+        <result column="description" property="description"/>
+        <result column="logo" property="logo"/>
+        <result column="sort" property="sort"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+    <sql id="Base_Column_List">id, name, url, description, logo, sort, status, create_time, update_time</sql>
+    <select id="selectById" resultMap="BaseResultMap">SELECT <include refid="Base_Column_List"/> FROM link WHERE id = #{id}</select>
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM link
+        <if test="status != null"><where>status = #{status}</where></if>
+        ORDER BY sort ASC, id ASC
+    </select>
+    <select id="selectListForAdmin" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM link
+        <if test="status != null"><where>status = #{status}</where></if>
+        ORDER BY sort ASC, id DESC LIMIT #{offset}, #{limit}
+    </select>
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM link
+        <if test="status != null"><where>status = #{status}</where></if>
+    </select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO link (name, url, description, logo, sort, status, create_time, update_time)
+        VALUES (#{name}, #{url}, #{description}, #{logo}, #{sort}, #{status}, #{createTime}, #{updateTime})
+    </insert>
+    <update id="updateById">
+        UPDATE link SET name=#{name}, url=#{url}, description=#{description}, logo=#{logo}, sort=#{sort}, status=#{status}, update_time=#{updateTime} WHERE id=#{id}
+    </update>
+    <update id="updateStatus">UPDATE link SET status = #{status} WHERE id = #{id}</update>
+    <delete id="deleteById">DELETE FROM link WHERE id = #{id}</delete>
+</mapper>

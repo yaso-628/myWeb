@@ -77,8 +77,8 @@
           </template>
 
           <template v-else>
-            <NeButton plain hoverable @click="go('/login')">登录</NeButton>
-            <NeButton hoverable @click="go('/register')">注册</NeButton>
+            <button type="button" class="btn-primary-solid" v-ripple @click="go('/login')">登录</button>
+            <button type="button" class="btn-primary-solid" v-ripple @click="go('/register')">注册</button>
           </template>
         </div>
       </div>
@@ -92,7 +92,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { useThemeStore } from '@/store/theme'
 import { profileApi } from '@/api'
-import NeButton from '@/components/bits2d/NeButton.vue'
 import TopClock from '@/components/TopClock.vue'
 import { UiButton } from '@vuebits/ui'
 

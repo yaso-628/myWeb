@@ -155,3 +155,18 @@ button:active {
   transform: scale(15);
   opacity: 0;
 }
+
+/* ================= Solid Primary Button (match Link.vue "提交申请") ================= */
+.btn-primary-solid {
+  padding: 0.45rem 1.25rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.btn-primary-solid:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

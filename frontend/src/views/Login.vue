@@ -22,9 +22,9 @@
         <p v-if="error" class="error">{{ error }}</p>
 
         <div class="submit-row">
-          <NeButton :loading="loading" :disabled="loading" @click="handleLogin">
-            登录
-          </NeButton>
+          <button type="submit" class="btn-primary-solid" :disabled="loading" v-ripple>
+            {{ loading ? '登录中...' : '登录' }}
+          </button>
         </div>
       </form>
 
@@ -42,7 +42,6 @@ import { authApi } from '@/api'
 import { useUserStore } from '@/store/user'
 import NeCard from '@/components/bits2d/NeCard.vue'
 import NeInput from '@/components/bits2d/NeInput.vue'
-import NeButton from '@/components/bits2d/NeButton.vue'
 
 const router = useRouter()
 const route = useRoute()

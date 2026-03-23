@@ -48,13 +48,15 @@
                 />
 
                 <div class="actions">
-                  <NeButton
+                  <button
+                    type="button"
+                    class="btn-primary-solid"
                     :disabled="submitting"
-                    :loading="submitting"
+                    v-ripple
                     @click="submitComment"
                   >
                     {{ submitting ? '提交中...' : '发表评论' }}
-                  </NeButton>
+                  </button>
                   <span v-if="submitSuccess" class="success-tip">评论已提交，审核通过后会显示</span>
                 </div>
               </NeCard>
@@ -116,7 +118,6 @@ import NeTabs from '@/components/bits2d/NeTabs.vue'
 import NeCard from '@/components/bits2d/NeCard.vue'
 import NeInput from '@/components/bits2d/NeInput.vue'
 import NeTextarea from '@/components/bits2d/NeTextarea.vue'
-import NeButton from '@/components/bits2d/NeButton.vue'
 
 const route = useRoute()
 const userStore = useUserStore()

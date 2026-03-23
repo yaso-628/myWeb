@@ -26,9 +26,9 @@
         <div class="field">
           <NeTextarea v-model="form.content" placeholder="留言内容" required :rows="4" />
         </div>
-        <UiButton class="submit-btn" :disabled="loading" color="primary" plain hoverable roundedLg v-ripple @click="handleSubmit">
+        <button type="submit" class="btn-primary-solid submit-btn" :disabled="loading" v-ripple>
           {{ loading ? '提交中...' : '提交' }}
-        </UiButton>
+        </button>
         <span v-if="submitSuccess" class="success-tip">留言已提交，审核通过后会显示</span>
       </form>
     </div>
@@ -89,7 +89,6 @@ import { resolveAssetUrl } from '@/utils/asset'
 import NeInput from '@/components/bits2d/NeInput.vue'
 import NeTextarea from '@/components/bits2d/NeTextarea.vue'
 import NeButton from '@/components/bits2d/NeButton.vue'
-import { UiButton } from '@vuebits/ui'
 
 const userStore = useUserStore()
 const form = reactive({ nickname: '', email: '', content: '' })
@@ -199,15 +198,7 @@ onMounted(fetchList)
 }
 
 .submit-btn {
-  display: inline-flex;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-.submit-btn:hover {
-  background: rgba(37, 99, 235, 0.08) !important;
-  box-shadow: none !important;
+  /* 复用全局 btn-primary-solid 的样式；该 class 只用于局部命名 */
 }
 .user-info {
   display: flex;

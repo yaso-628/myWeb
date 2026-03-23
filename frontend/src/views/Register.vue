@@ -28,9 +28,9 @@
         <p v-if="error" class="error">{{ error }}</p>
 
         <div class="submit-row">
-          <NeButton :loading="loading" :disabled="loading" @click="handleRegister">
-            注册
-          </NeButton>
+          <button type="submit" class="btn-primary-solid" :disabled="loading" v-ripple>
+            {{ loading ? '注册中...' : '注册' }}
+          </button>
         </div>
       </form>
 
@@ -47,7 +47,6 @@ import { useRouter } from 'vue-router'
 import { authApi } from '@/api'
 import NeCard from '@/components/bits2d/NeCard.vue'
 import NeInput from '@/components/bits2d/NeInput.vue'
-import NeButton from '@/components/bits2d/NeButton.vue'
 
 const router = useRouter()
 const form = reactive({ username: '', password: '', nickname: '', email: '' })

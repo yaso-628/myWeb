@@ -1,85 +1,105 @@
 <template>
   <div class="blog-detail">
     <div v-if="blog" class="content">
-      <h1>{{ blog.title }}</h1>
-      <div class="meta">
-        <span>{{ formatDate(blog.publishTime || blog.createTime) }}</span>
-        <span v-if="blog.category">{{ blog.category }}</span>
-        <span v-if="blog.tags" class="tags">{{ blog.tags }}</span>
-        <span>阅读 {{ blog.viewCount || 0 }}</span>
-      </div>
-      <img v-if="blog.cover" :src="blog.cover" alt="封面" class="cover" />
-      <div class="body" v-html="blog.content"></div>
-
-      <!-- 评论区 -->
-      <section class="comments">
-        <h2>评论</h2>
-        <div class="comment-form card animate-in">
-          <template v-if="userStore.isLoggedIn">
-            <div class="user-info">
-              <div class="avatar" v-if="userStore.user?.avatar">
-                <img :src="toAssetUrl(userStore.user.avatar)" :alt="userStore.user.nickname || userStore.user.username" />
-              </div>
-              <div class="user-text">
-                <div class="name">{{ userStore.user?.nickname || userStore.user?.username }}</div>
-                <div class="hint">已登录，使用你的个人信息发表评论</div>
-              </div>
-            </div>
-          </template>
-          <template v-else>
-            <div class="guest-fields">
-              <input v-model="guestNickname" type="text" placeholder="昵称（必填）" />
-              <input v-model="guestEmail" type="email" placeholder="邮箱（必填，仅用于联系）" />
-            </div>
-          </template>
-          <textarea
-            v-model="commentContent"
-            rows="4"
-            placeholder="写点什么吧..."
-          ></textarea>
-          <div class="actions">
-            <button :disabled="submitting" @click="submitComment" v-ripple>
-              {{ submitting ? '提交中...' : '发表评论' }}
-            </button>
-            <span v-if="submitSuccess" class="success-tip">评论已提交，审核通过后会显示</span>
+      <NeTabs v-model="activeTab" :items="tabs">
+        <template #article>
+          <h1>{{ blog.title }}</h1>
+          <div class="meta">
+            <span>{{ formatDate(blog.publishTime || blog.createTime) }}</span>
+            <span v-if="blog.category">{{ blog.category }}</span>
+            <span v-if="blog.tags" class="tags">{{ blog.tags }}</span>
+            <span>阅读 {{ blog.viewCount || 0 }}</span>
           </div>
-        </div>
+          <img v-if="blog.cover" :src="blog.cover" alt="封面" class="cover" />
+          <div class="body" v-html="blog.content"></div>
+        </template>
 
-        <div class="comment-list card" v-if="comments.length">
-          <h3>已有评论</h3>
-          <ul>
-            <li v-for="item in comments" :key="item.id" class="comment-item">
-              <div class="avatar small">
-                <template v-if="item.avatar">
-                  <img :src="toAssetUrl(item.avatar)" :alt="item.nickname || '访客'" />
+        <template #comments>
+          <!-- 评论区 -->
+          <section class="comments">
+            <h2>评论</h2>
+
+            <div class="comment-form animate-in">
+              <NeCard>
+                <template v-if="userStore.isLoggedIn">
+                  <div class="user-info">
+                    <div class="avatar" v-if="userStore.user?.avatar">
+                      <img :src="toAssetUrl(userStore.user.avatar)" :alt="userStore.user.nickname || userStore.user.username" />
+                    </div>
+                    <div class="user-text">
+                      <div class="name">{{ userStore.user?.nickname || userStore.user?.username }}</div>
+                      <div class="hint">已登录，使用你的个人信息发表评论</div>
+                    </div>
+                  </div>
                 </template>
+
                 <template v-else>
-                  <span>{{ (item.nickname || '访客').charAt(0).toUpperCase() }}</span>
+                  <div class="guest-fields">
+                    <NeInput v-model="guestNickname" type="text" placeholder="昵称（必填）" required />
+                    <NeInput v-model="guestEmail" type="email" placeholder="邮箱（必填，仅用于联系）" required />
+                  </div>
                 </template>
-              </div>
-              <div class="comment-body">
-                <div class="head">
-                  <span class="nickname">{{ item.nickname || '访客' }}</span>
-                  <span class="time">{{ formatFullDate(item.createTime) }}</span>
+
+                <NeTextarea
+                  v-model="commentContent"
+                  :rows="4"
+                  placeholder="写点什么吧..."
+                  required
+                />
+
+                <div class="actions">
+                  <NeButton
+                    :disabled="submitting"
+                    :loading="submitting"
+                    @click="submitComment"
+                  >
+                    {{ submitting ? '提交中...' : '发表评论' }}
+                  </NeButton>
+                  <span v-if="submitSuccess" class="success-tip">评论已提交，审核通过后会显示</span>
                 </div>
-                <p class="content" :class="{ collapsed: !expandedComments[item.id] }">
-                  {{ item.content }}
-                </p>
-                <button
-                  v-if="item.content && item.content.length > 120"
-                  class="toggle"
-                  type="button"
-                  @click="toggleCommentExpand(item.id)"
-                >
-                  {{ expandedComments[item.id] ? '收起' : '展开更多' }}
-                </button>
-              </div>
-            </li>
-          </ul>
-        </div>
-        <p v-else-if="!commentLoading" class="empty-comments">暂无评论，快来抢沙发～</p>
-        <p v-else class="loading">评论加载中...</p>
-      </section>
+              </NeCard>
+            </div>
+
+            <div class="comment-list" v-if="comments.length">
+              <NeCard>
+                <h3>已有评论</h3>
+                <ul>
+                  <li v-for="item in comments" :key="item.id" class="comment-item">
+                    <div class="avatar small">
+                      <template v-if="item.avatar">
+                        <img :src="toAssetUrl(item.avatar)" :alt="item.nickname || '访客'" />
+                      </template>
+                      <template v-else>
+                        <span>{{ (item.nickname || '访客').charAt(0).toUpperCase() }}</span>
+                      </template>
+                    </div>
+                    <div class="comment-body">
+                      <div class="head">
+                        <span class="nickname">{{ item.nickname || '访客' }}</span>
+                        <span class="time">{{ formatFullDate(item.createTime) }}</span>
+                      </div>
+                      <p class="content" :class="{ collapsed: !expandedComments[item.id] }">
+                        {{ item.content }}
+                      </p>
+                      <button
+                        v-if="item.content && item.content.length > 120"
+                        class="toggle"
+                        type="button"
+                        @click="toggleCommentExpand(item.id)"
+                      >
+                        {{ expandedComments[item.id] ? '收起' : '展开更多' }}
+                      </button>
+                    </div>
+                  </li>
+                </ul>
+              </NeCard>
+            </div>
+
+            <p v-else-if="!commentLoading" class="empty-comments">暂无评论，快来抢沙发～</p>
+            <p v-else class="loading">评论加载中...</p>
+          </section>
+        </template>
+      </NeTabs>
     </div>
     <p v-else-if="!loading" class="empty">文章不存在</p>
     <p v-else class="loading">加载中...</p>
@@ -92,6 +112,11 @@ import { useRoute } from 'vue-router'
 import { blogApi, commentApi } from '@/api'
 import { useUserStore } from '@/store/user'
 import { resolveAssetUrl } from '@/utils/asset'
+import NeTabs from '@/components/bits2d/NeTabs.vue'
+import NeCard from '@/components/bits2d/NeCard.vue'
+import NeInput from '@/components/bits2d/NeInput.vue'
+import NeTextarea from '@/components/bits2d/NeTextarea.vue'
+import NeButton from '@/components/bits2d/NeButton.vue'
 
 const route = useRoute()
 const userStore = useUserStore()
@@ -106,6 +131,11 @@ const submitSuccess = ref(false)
 const guestNickname = ref('')
 const guestEmail = ref('')
 const expandedComments = ref({})
+const activeTab = ref(0)
+const tabs = [
+  { key: 'article', text: '文章内容' },
+  { key: 'comments', text: '评论区' }
+]
 
 function toAssetUrl(url) {
   return resolveAssetUrl(url)
@@ -277,24 +307,10 @@ onMounted(fetchBlogAndComments)
   color: var(--color-text-muted);
 }
 .guest-fields {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
-  flex-wrap: wrap;
-}
-.guest-fields input {
-  flex: 1 1 160px;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  border: 1px solid var(--color-border);
-}
-.comment-form textarea {
-  width: 100%;
-  margin-top: 0.25rem;
-  padding: 0.6rem 0.75rem;
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
-  resize: vertical;
 }
 .actions {
   margin-top: 0.75rem;
@@ -302,17 +318,8 @@ onMounted(fetchBlogAndComments)
   align-items: center;
   gap: 0.75rem;
 }
-.actions button {
-  padding: 0.5rem 1.25rem;
-  border-radius: 999px;
-  border: none;
-  cursor: pointer;
-  background: var(--color-primary);
-  color: #fff;
-}
-.actions button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.actions :deep(.ui-button) {
+  white-space: nowrap;
 }
 .success-tip {
   font-size: 0.85rem;

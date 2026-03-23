@@ -17,16 +17,18 @@
         </template>
         <template v-else>
           <div class="field">
-            <input v-model="form.nickname" type="text" placeholder="昵称" required />
+            <NeInput v-model="form.nickname" type="text" placeholder="昵称" required />
           </div>
           <div class="field">
-            <input v-model="form.email" type="email" placeholder="邮箱" required />
+            <NeInput v-model="form.email" type="email" placeholder="邮箱" required />
           </div>
         </template>
         <div class="field">
-          <textarea v-model="form.content" placeholder="留言内容" required rows="4"></textarea>
+          <NeTextarea v-model="form.content" placeholder="留言内容" required :rows="4" />
         </div>
-        <button type="submit" :disabled="loading" v-ripple>{{ loading ? '提交中...' : '提交' }}</button>
+        <UiButton class="submit-btn" :disabled="loading" color="primary" plain hoverable roundedLg v-ripple @click="handleSubmit">
+          {{ loading ? '提交中...' : '提交' }}
+        </UiButton>
         <span v-if="submitSuccess" class="success-tip">留言已提交，审核通过后会显示</span>
       </form>
     </div>
@@ -64,9 +66,16 @@
       <p v-else-if="!loading" class="empty">暂无留言</p>
       <p v-else class="loading">加载中...</p>
       <div v-if="total > pageSize" class="pagination">
-        <button :disabled="page <= 1" @click="page--; fetchList()">上一页</button>
+        <NeButton :disabled="page <= 1" plain hoverable @click="page--; fetchList()">上一页</NeButton>
         <span>{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
-        <button :disabled="page >= Math.ceil(total / pageSize)" @click="page++; fetchList()">下一页</button>
+        <NeButton
+          :disabled="page >= Math.ceil(total / pageSize)"
+          plain
+          hoverable
+          @click="page++; fetchList()"
+        >
+          下一页
+        </NeButton>
       </div>
     </div>
   </div>
@@ -77,6 +86,10 @@ import { ref, reactive, onMounted } from 'vue'
 import { commentApi } from '@/api'
 import { useUserStore } from '@/store/user'
 import { resolveAssetUrl } from '@/utils/asset'
+import NeInput from '@/components/bits2d/NeInput.vue'
+import NeTextarea from '@/components/bits2d/NeTextarea.vue'
+import NeButton from '@/components/bits2d/NeButton.vue'
+import { UiButton } from '@vuebits/ui'
 
 const userStore = useUserStore()
 const form = reactive({ nickname: '', email: '', content: '' })
@@ -175,27 +188,26 @@ onMounted(fetchList)
 .field {
   margin-bottom: 0.75rem;
 }
-.field input, .field textarea {
+.field {
+  /* NeInput/NeTextarea 基于 UiInput/UiTextarea：保持布局一致即可 */
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-}
-.field textarea {
-  resize: vertical;
-}
-button {
-  padding: 0.5rem 1.5rem;
-  background: var(--color-primary);
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
 }
 .success-tip {
   margin-left: 0.75rem;
   font-size: 0.9rem;
   color: #166534;
+}
+
+.submit-btn {
+  display: inline-flex;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.submit-btn:hover {
+  background: rgba(37, 99, 235, 0.08) !important;
+  box-shadow: none !important;
 }
 .user-info {
   display: flex;
@@ -279,6 +291,10 @@ button {
   color: var(--color-primary);
   font-size: 0.8rem;
   cursor: pointer;
+  position: relative;
+}
+.toggle:hover {
+  text-shadow: 0 0 14px rgba(37, 99, 235, 0.35);
 }
 .empty, .loading {
   padding: 2rem 0;
@@ -320,6 +336,9 @@ button {
     font-size: 0.9rem;
   }
   button {
+    width: 100%;
+  }
+  .submit-btn {
     width: 100%;
   }
   .success-tip {

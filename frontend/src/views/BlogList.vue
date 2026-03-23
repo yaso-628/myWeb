@@ -3,14 +3,34 @@
     <div class="header">
       <h1>博客文章</h1>
       <div class="actions">
-        <router-link v-if="userStore.isAdmin" to="/admin/blogs/new" class="btn-publish">后台发表</router-link>
-        <router-link v-else-if="userStore.isLoggedIn" to="/blog/submit" class="btn-publish secondary">
+        <UiButton
+          v-if="userStore.isAdmin"
+          to="/admin/blogs/new"
+          color="primary"
+          plain
+          hoverable
+          roundedLg
+          v-ripple
+          class="admin-publish-btn"
+        >
+          后台发表
+        </UiButton>
+        <NeButton
+          v-else-if="userStore.isLoggedIn"
+          to="/blog/submit"
+          :disabled="false"
+        >
           我要投稿
-        </router-link>
+        </NeButton>
       </div>
     </div>
     <div class="filters">
-      <input v-model="categoryFilter" type="text" placeholder="按分类筛选" @input="debouncedFetch" />
+      <NeInput
+        v-model="categoryFilter"
+        type="text"
+        placeholder="按分类筛选"
+        @update:modelValue="debouncedFetch"
+      />
     </div>
     <ul v-if="list.length" class="list">
       <li v-for="(blog, i) in list" :key="blog.id" class="item" :style="{ animationDelay: `${i * 0.06}s` }">
@@ -26,9 +46,16 @@
     <p v-else-if="!loading" class="empty">暂无文章</p>
     <p v-else class="loading">加载中...</p>
     <div v-if="total > pageSize" class="pagination">
-      <button :disabled="page <= 1" @click="page--; fetchList()">上一页</button>
+      <NeButton :disabled="page <= 1" plain hoverable @click="page--; fetchList()">上一页</NeButton>
       <span>{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
-      <button :disabled="page >= Math.ceil(total / pageSize)" @click="page++; fetchList()">下一页</button>
+      <NeButton
+        :disabled="page >= Math.ceil(total / pageSize)"
+        plain
+        hoverable
+        @click="page++; fetchList()"
+      >
+        下一页
+      </NeButton>
     </div>
   </div>
 </template>
@@ -37,6 +64,9 @@
 import { ref, onMounted } from 'vue'
 import { blogApi } from '@/api'
 import { useUserStore } from '@/store/user'
+import NeInput from '@/components/bits2d/NeInput.vue'
+import NeButton from '@/components/bits2d/NeButton.vue'
+import { UiButton } from '@vuebits/ui'
 
 const userStore = useUserStore()
 const list = ref([])
@@ -84,25 +114,37 @@ onMounted(fetchList)
 .header h1 {
   margin: 0;
 }
-.btn-publish {
-  padding: 0.5rem 1rem;
-  background: var(--color-primary);
-  color: #fff;
-  border-radius: 6px;
-  text-decoration: none;
-  font-size: 0.95rem;
+.admin-publish-btn {
+  /* 避免“黑边包裹 + 渐变外壳”的观感 */
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
-.btn-publish:hover {
-  opacity: 0.9;
+
+.admin-publish-btn :deep(.ui-button) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.admin-publish-btn :deep(.ui-button__container) {
+  min-height: 36px;
+  padding: 0 1rem;
+  border-radius: 999px;
+}
+
+.admin-publish-btn:hover {
+  background: rgba(37, 99, 235, 0.08) !important;
+  box-shadow: none !important;
 }
 .filters {
   margin-bottom: 1rem;
+  max-width: 260px;
+  width: 100%;
 }
-.filters input {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  width: 200px;
+.filters {
+  display: flex;
+  align-items: center;
 }
 .list {
   list-style: none;
@@ -160,13 +202,8 @@ onMounted(fetchList)
   margin-top: 2rem;
   justify-content: center;
 }
-.pagination button {
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-}
-.pagination button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.pagination :deep(.ui-button) {
+  white-space: nowrap;
 }
 
 @media (max-width: 768px) {

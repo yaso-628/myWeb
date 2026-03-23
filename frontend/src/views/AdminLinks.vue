@@ -57,46 +57,51 @@
         <button :disabled="page >= totalPages" @click="page++; fetchList()">下一页</button>
       </div>
 
-      <!-- 添加/编辑弹窗 -->
-      <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-        <div class="modal">
-          <h3>{{ editingId ? '编辑友链' : '添加友链' }}</h3>
-          <form @submit.prevent="saveLink">
-            <div class="field">
-              <label>名称 <span class="required">*</span></label>
-              <input v-model="form.name" type="text" required placeholder="站点名称" />
-            </div>
-            <div class="field">
-              <label>链接 <span class="required">*</span></label>
-              <input v-model="form.url" type="url" required placeholder="https://..." />
-            </div>
-            <div class="field">
-              <label>描述</label>
-              <input v-model="form.description" type="text" placeholder="简短描述" />
-            </div>
-            <div class="field">
-              <label>Logo URL</label>
-              <input v-model="form.logo" type="url" placeholder="https://..." />
-            </div>
-            <div class="field">
-              <label>排序</label>
-              <input v-model.number="form.sort" type="number" placeholder="数字越小越靠前" />
-            </div>
-            <div class="field">
-              <label>状态</label>
-              <select v-model.number="form.status">
-                <option :value="0">待审核</option>
-                <option :value="1">已通过</option>
-                <option :value="2">已拒绝</option>
-              </select>
-            </div>
-            <div class="actions">
-              <button type="submit" class="btn primary" :disabled="saving">{{ saving ? '保存中...' : '保存' }}</button>
-              <button type="button" class="btn secondary" @click="closeModal">取消</button>
-            </div>
-          </form>
-        </div>
-      </div>
+      <!-- 添加/编辑弹窗（Bits UI Modal + 二次元霓虹特效） -->
+      <NeModal v-model="showModal" :title="editingId ? '编辑友链' : '添加友链'">
+        <form @submit.prevent="saveLink" class="modal-form">
+          <div class="field">
+            <label>名称 <span class="required">*</span></label>
+            <NeInput v-model="form.name" type="text" required placeholder="站点名称" />
+          </div>
+
+          <div class="field">
+            <label>链接 <span class="required">*</span></label>
+            <NeInput v-model="form.url" type="url" required placeholder="https://..." />
+          </div>
+
+          <div class="field">
+            <label>描述</label>
+            <NeInput v-model="form.description" type="text" placeholder="简短描述" />
+          </div>
+
+          <div class="field">
+            <label>Logo URL</label>
+            <NeInput v-model="form.logo" type="url" placeholder="https://..." />
+          </div>
+
+          <div class="field">
+            <label>排序</label>
+            <NeInput v-model.number="form.sort" type="number" placeholder="数字越小越靠前" />
+          </div>
+
+          <div class="field">
+            <label>状态</label>
+            <select class="bits2d-select" v-model.number="form.status">
+              <option :value="0">待审核</option>
+              <option :value="1">已通过</option>
+              <option :value="2">已拒绝</option>
+            </select>
+          </div>
+
+          <div class="actions">
+            <NeButton :disabled="saving" :loading="saving" @click="saveLink">
+              {{ saving ? '保存中...' : '保存' }}
+            </NeButton>
+            <NeButton plain hoverable @click="closeModal">取消</NeButton>
+          </div>
+        </form>
+      </NeModal>
     </div>
   </div>
 </template>
@@ -105,6 +110,9 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import Sidebar from '@/components/Sidebar.vue'
 import { adminApi } from '@/api'
+import NeModal from '@/components/bits2d/NeModal.vue'
+import NeInput from '@/components/bits2d/NeInput.vue'
+import NeButton from '@/components/bits2d/NeButton.vue'
 
 const list = ref([])
 const total = ref(0)
@@ -361,27 +369,6 @@ onMounted(fetchList)
   cursor: not-allowed;
 }
 
-/* 弹窗 */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-.modal {
-  background: #fff;
-  border-radius: 12px;
-  padding: 1.5rem;
-  max-width: 480px;
-  width: 90%;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-.modal h3 {
-  margin: 0 0 1.5rem;
-}
 .field {
   margin-bottom: 1rem;
 }
@@ -393,13 +380,32 @@ onMounted(fetchList)
 .field .required {
   color: #dc2626;
 }
-.field input,
-.field select {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
+
+.modal-form {
+  min-width: 320px;
 }
+
+.bits2d-select {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  background: rgba(255, 255, 255, 0.75);
+  outline: none;
+  transition: box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.bits2d-select:focus {
+  border-color: rgba(56, 189, 248, 0.7);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+  animation: bits2d-breathe 2.4s ease-in-out infinite;
+}
+
+.dark .bits2d-select {
+  background: rgba(2, 6, 23, 0.35);
+  border-color: rgba(51, 65, 85, 0.8);
+}
+
 .actions {
   display: flex;
   gap: 0.75rem;

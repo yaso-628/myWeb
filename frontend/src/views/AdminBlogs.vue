@@ -4,7 +4,17 @@
     <div class="main">
       <div class="header">
         <h1>文章管理</h1>
-        <router-link to="/admin/blogs/new" class="btn primary">发表文章</router-link>
+        <UiButton
+          to="/admin/blogs/new"
+          color="primary"
+          plain
+          hoverable
+          roundedLg
+          v-ripple
+          class="admin-publish-btn"
+        >
+          发表文章
+        </UiButton>
       </div>
       <div class="filters">
         <select v-model="statusFilter" @change="fetchList">
@@ -62,6 +72,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Sidebar from '@/components/Sidebar.vue'
 import { adminApi } from '@/api'
+import { UiButton } from '@vuebits/ui'
 
 const router = useRouter()
 const list = ref([])
@@ -129,15 +140,28 @@ onMounted(fetchList)
 .header h1 {
   margin: 0;
 }
-.btn.primary {
-  padding: 0.5rem 1rem;
-  background: var(--color-primary);
-  color: #fff;
-  border-radius: 6px;
-  text-decoration: none;
+.admin-publish-btn {
+  /* 避免“黑边包裹 + 渐变外壳”的观感 */
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
-.btn.primary:hover {
-  opacity: 0.9;
+
+.admin-publish-btn :deep(.ui-button) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.admin-publish-btn :deep(.ui-button__container) {
+  min-height: 36px;
+  padding: 0 1rem;
+  border-radius: 999px;
+}
+
+.admin-publish-btn:hover {
+  background: rgba(37, 99, 235, 0.08) !important;
+  box-shadow: none !important;
 }
 .filters {
   margin-bottom: 1rem;

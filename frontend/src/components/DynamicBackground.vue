@@ -1,19 +1,28 @@
 <template>
   <div class="dynamic-bg" :class="{ 'has-image': bgImage }">
-    <div v-if="bgImage" class="bg-image-wrap">
+    <div
+      v-if="bgImage"
+      class="bg-image-wrap"
+      :style="{ transform: `translate3d(0, ${parallaxY}px, 0)` }"
+    >
       <img :src="bgImage" alt="" class="bg-image" />
       <div class="bg-overlay"></div>
     </div>
-    <div v-else class="bg-gradient"></div>
+    <div v-else class="bg-gradient" :style="{ transform: `translate3d(0, ${parallaxY}px, 0)` }"></div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onBeforeUnmount, onMounted } from 'vue'
 import { profileApi } from '@/api'
 import { resolveAssetUrl } from '@/utils/asset'
 
 const bgImage = ref('')
+const parallaxY = ref(0)
+let rafId = 0
+let lastScroll = 0
+let destroyed = false
+let cleanupScroll = null
 
 onMounted(async () => {
   try {
@@ -28,18 +37,70 @@ onMounted(async () => {
     }
   } catch (_) {}
 })
+
+onMounted(() => {
+  const onScroll = () => {
+    lastScroll = window.scrollY || 0
+    if (rafId) return
+    rafId = window.requestAnimationFrame(() => {
+      rafId = 0
+      if (destroyed) return
+      // 背景轻微跟随滚动，制造“街景视差”
+      parallaxY.value = -Math.round(lastScroll * 0.03)
+    })
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true })
+  cleanupScroll = () => window.removeEventListener('scroll', onScroll)
+})
+
+onBeforeUnmount(() => {
+  destroyed = true
+  cleanupScroll?.()
+  if (rafId) window.cancelAnimationFrame(rafId)
+})
 </script>
 
 <style scoped>
 .dynamic-bg {
   position: fixed;
   inset: 0;
-  z-index: -2;
+  z-index: 0;
   overflow: hidden;
+  pointer-events: none;
+}
+
+.dynamic-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* 暗角 + 柔雾：让顶部导航白字更易读，也更“舞台感” */
+  background: radial-gradient(circle at 50% 20%, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.38) 70%, rgba(0, 0, 0, 0.52) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dynamic-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* 轻量扫描线（纯 CSS，避免重 JS） */
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.035),
+    rgba(255, 255, 255, 0.035) 1px,
+    rgba(0, 0, 0, 0.0) 3px,
+    rgba(0, 0, 0, 0.0) 6px
+  );
+  mix-blend-mode: overlay;
+  opacity: 0.25;
+  pointer-events: none;
+  z-index: 2;
 }
 .bg-image-wrap {
   position: absolute;
   inset: 0;
+  z-index: 0;
 }
 .bg-image {
   width: 100%;
@@ -74,7 +135,8 @@ onMounted(async () => {
   position: absolute;
   inset: 0;
   /* 更柔和的茉莉白风格渐变背景 */
-  background: radial-gradient(circle at 0% 0%, #fdfcff 0%, #f5ecff 32%, #e3f5ff 65%, #ffe9f2 100%);
+  background: radial-gradient(circle at 0% 0%, #f2fbff 0%, #e8f4ff 32%, #d9efff 63%, #f5f0ff 100%);
   opacity: 0.85;
+  z-index: 0;
 }
 </style>

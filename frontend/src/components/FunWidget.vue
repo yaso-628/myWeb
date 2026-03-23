@@ -23,7 +23,7 @@ const router = useRouter()
 
 const time = ref('00:00:00')
 const greeting = ref('')
-const collapsed = ref(false)
+const collapsed = ref(true)
 
 const quotes = [
   '代码改变世界 ✨',

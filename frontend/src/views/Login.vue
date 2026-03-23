@@ -1,42 +1,48 @@
 <template>
   <div class="login-page">
-    <el-card class="card" shadow="hover">
-      <h1>登录</h1>
-      <el-form :model="form" @submit.prevent>
-        <el-form-item label="用户名">
-          <el-input v-model="form.username" autocomplete="username" placeholder="请输入用户名" />
-        </el-form-item>
-        <el-form-item label="密码">
-          <el-input
-            v-model="form.password"
-            type="password"
-            show-password
-            autocomplete="current-password"
-            placeholder="请输入密码"
-          />
-        </el-form-item>
+    <NeCard>
+      <h1 class="login-title">登录</h1>
+
+      <form class="login-form" @submit.prevent="handleLogin">
+        <label class="field-label">用户名</label>
+        <NeInput
+          v-model="form.username"
+          placeholder="请输入用户名"
+          required
+        />
+
+        <label class="field-label password-label">密码</label>
+        <NeInput
+          v-model="form.password"
+          type="password"
+          placeholder="请输入密码"
+          required
+        />
+
         <p v-if="error" class="error">{{ error }}</p>
-        <el-form-item>
-          <el-button
-            type="primary"
-            class="submit-btn"
-            :loading="loading"
-            @click="handleLogin"
-          >
+
+        <div class="submit-row">
+          <NeButton :loading="loading" :disabled="loading" @click="handleLogin">
             登录
-          </el-button>
-        </el-form-item>
-      </el-form>
-      <p class="tip">还没有账号？<router-link to="/register">立即注册</router-link></p>
-    </el-card>
+          </NeButton>
+        </div>
+      </form>
+
+      <p class="tip">
+        还没有账号？<router-link to="/register">立即注册</router-link>
+      </p>
+    </NeCard>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { authApi } from '@/api'
 import { useUserStore } from '@/store/user'
+import NeCard from '@/components/bits2d/NeCard.vue'
+import NeInput from '@/components/bits2d/NeInput.vue'
+import NeButton from '@/components/bits2d/NeButton.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -81,21 +87,37 @@ async function handleLogin() {
   justify-content: center;
   padding: 2rem;
 }
-.card {
-  width: 100%;
-  max-width: 360px;
-}
-.card h1 {
-  margin-bottom: 1.5rem;
+.login-title {
   text-align: center;
+  margin-bottom: 1.25rem;
 }
-.submit-btn {
-  width: 100%;
+
+.login-form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.8rem;
 }
+
+.field-label {
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: var(--color-text);
+}
+
+.password-label {
+  margin-top: 0.35rem;
+}
+
 .error {
   color: #dc2626;
   font-size: 0.875rem;
-  margin-top: 0.5rem;
+  margin-top: 0.15rem;
+}
+
+.submit-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.35rem;
 }
 .tip {
   margin-top: 1rem;

@@ -146,12 +146,15 @@ async function handleSubmit() {
   gap: 0.75rem;
 }
 .footer button {
-  padding: 0.5rem 1.5rem;
+  padding: 0.4rem 1rem;
   border-radius: 999px;
   border: none;
   cursor: pointer;
   background: var(--color-primary);
   color: #fff;
+  font-size: 0.86rem;
+  line-height: 1.2;
+  font-weight: 600;
 }
 .footer button:disabled {
   opacity: 0.6;

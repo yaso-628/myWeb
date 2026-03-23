@@ -1,5 +1,5 @@
 <template>
-  <div class="music-player" :class="{ expanded: expanded, dark: isDark }">
+  <div class="music-player" :class="{ expanded: expanded, dark: isDark, playing: playing }">
     <button class="toggle-btn" @click="expanded = !expanded" title="音乐">
       <span v-if="playing" class="icon">🎵</span>
       <span v-else class="icon muted">🔇</span>
@@ -9,6 +9,29 @@
         <div class="visualizer" :class="{ active: playing }">
           <span v-for="i in 4" :key="i" class="bar"></span>
         </div>
+
+        <div
+          class="progress"
+          role="slider"
+          aria-label="播放进度"
+          :aria-valuemin="0"
+          :aria-valuemax="Math.max(1, Math.floor(duration))"
+          :aria-valuenow="Math.floor(currentTime)"
+        >
+          <div
+            ref="progressEl"
+            class="progress-track"
+            @pointerdown="onProgressPointerDown"
+          >
+            <div class="progress-fill" :style="{ width: `${progressPercent}%` }" />
+            <div class="progress-knob" :style="{ left: `${progressPercent}%` }" />
+          </div>
+          <div class="progress-time">
+            <span>{{ formatTime(currentTime) }}</span>
+            <span>{{ formatTime(duration) }}</span>
+          </div>
+        </div>
+
         <div class="controls">
           <button class="ctrl" @click="togglePlay" :disabled="!currentUrl">
             {{ playing ? '⏸' : '▶' }}
@@ -40,6 +63,9 @@
     <audio
       ref="audioEl"
       @ended="onEnded"
+      @loadedmetadata="onLoadedMetadata"
+      @durationchange="onLoadedMetadata"
+      @timeupdate="onTimeUpdate"
       @play="playing = true"
       @pause="playing = false"
       @error="onError"
@@ -60,6 +86,10 @@ const volume = ref(60)
 const playlist = ref([])
 const currentIndex = ref(0)
 const loading = ref(false)
+const duration = ref(0)
+const currentTime = ref(0)
+const isSeeking = ref(false)
+const progressEl = ref(null)
 
 const themeStore = useThemeStore()
 const isDark = computed(() => themeStore.isDark)
@@ -68,6 +98,19 @@ const currentUrl = computed(() => {
   const item = playlist.value[currentIndex.value]
   return item ? resolveAssetUrl(item.url) : ''
 })
+
+const progressPercent = computed(() => {
+  if (!duration.value) return 0
+  return (currentTime.value / duration.value) * 100
+})
+
+function formatTime(t) {
+  if (!Number.isFinite(t) || t < 0) return '0:00'
+  const sec = Math.floor(t)
+  const m = Math.floor(sec / 60)
+  const s = String(sec % 60).padStart(2, '0')
+  return `${m}:${s}`
+}
 
 async function loadPlaylist() {
   loading.value = true
@@ -131,6 +174,54 @@ function onError() {
   playing.value = false
 }
 
+function onLoadedMetadata() {
+  duration.value = audioEl.value?.duration ?? 0
+  // 读取一下当前时间，避免进度条从 0 突然跳
+  currentTime.value = audioEl.value?.currentTime ?? 0
+}
+
+function onTimeUpdate() {
+  if (isSeeking.value) return
+  currentTime.value = audioEl.value?.currentTime ?? 0
+}
+
+function getRatioFromClientX(clientX) {
+  const el = progressEl.value
+  if (!el) return 0
+  const rect = el.getBoundingClientRect()
+  const ratio = (clientX - rect.left) / rect.width
+  return Math.max(0, Math.min(1, ratio))
+}
+
+function seekAtRatio(ratio) {
+  const el = audioEl.value
+  if (!el || !duration.value) return
+  el.currentTime = duration.value * ratio
+  currentTime.value = el.currentTime
+}
+
+function onProgressPointerDown(e) {
+  const el = audioEl.value
+  if (!el || !duration.value) return
+  isSeeking.value = true
+  try {
+    seekAtRatio(getRatioFromClientX(e.clientX))
+  } catch (_) {}
+
+  const onMove = (ev) => {
+    if (!isSeeking.value) return
+    seekAtRatio(getRatioFromClientX(ev.clientX))
+  }
+
+  const onUp = () => {
+    isSeeking.value = false
+    window.removeEventListener('pointermove', onMove)
+  }
+
+  window.addEventListener('pointermove', onMove)
+  window.addEventListener('pointerup', onUp, { once: true })
+}
+
 function tryAutoPlay() {
   const consented = sessionStorage.getItem('bgm_consent')
   if (consented === '1' && currentUrl.value && audioEl.value) {
@@ -168,9 +259,9 @@ defineExpose({
 <style scoped>
 .music-player {
   position: fixed;
-  bottom: 90px;
-  right: 24px;
-  z-index: 997;
+  bottom: 24px;
+  right: 22px;
+  z-index: 996;
 }
 .toggle-btn {
   width: 44px;
@@ -345,6 +436,71 @@ defineExpose({
     transform: scaleY(1);
   }
 }
+
+.progress {
+  margin: 0.25rem 0 0.6rem;
+}
+
+.progress-track {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(96, 165, 250, 0.35);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0%;
+  background: linear-gradient(
+    90deg,
+    rgba(56, 189, 248, 0.95),
+    rgba(167, 139, 250, 0.95),
+    rgba(251, 113, 133, 0.75)
+  );
+  height: 100%;
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.22);
+  transition: width 120ms linear;
+  background-size: 200% 100%;
+}
+
+.music-player.playing .progress-fill {
+  animation: progress-shine 1.25s linear infinite;
+}
+
+.progress-knob {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(96, 165, 250, 0.65);
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.25);
+}
+
+.progress-time {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: rgba(226, 232, 240, 0.75);
+}
+
+@keyframes progress-shine {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 200% 0%;
+  }
+}
+
 .slide-enter-active,
 .slide-leave-active {
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -357,5 +513,16 @@ defineExpose({
 .dark .toggle-btn {
   background: radial-gradient(circle at 30% 0%, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.85));
   border-color: rgba(129, 140, 248, 0.85);
+}
+
+@media (max-width: 768px) {
+  .music-player {
+    bottom: 18px;
+    right: 14px;
+  }
+  .toggle-btn {
+    width: 40px;
+    height: 40px;
+  }
 }
 </style>

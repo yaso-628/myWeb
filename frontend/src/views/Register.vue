@@ -1,40 +1,43 @@
 <template>
   <div class="register-page">
-    <el-card class="card" shadow="hover">
-      <h1>注册</h1>
-      <el-form :model="form" @submit.prevent>
-        <el-form-item label="用户名">
-          <el-input v-model="form.username" autocomplete="username" placeholder="请输入用户名" />
-        </el-form-item>
-        <el-form-item label="密码">
-          <el-input
-            v-model="form.password"
-            type="password"
-            show-password
-            autocomplete="new-password"
-            placeholder="请输入密码"
-          />
-        </el-form-item>
-        <el-form-item label="昵称">
-          <el-input v-model="form.nickname" placeholder="选填" />
-        </el-form-item>
-        <el-form-item label="邮箱">
-          <el-input v-model="form.email" type="email" placeholder="选填" />
-        </el-form-item>
+    <NeCard>
+      <h1 class="register-title">注册</h1>
+
+      <form class="register-form" @submit.prevent="handleRegister">
+        <label class="field-label">用户名</label>
+        <NeInput
+          v-model="form.username"
+          placeholder="请输入用户名"
+          required
+        />
+
+        <label class="field-label password-label">密码</label>
+        <NeInput
+          v-model="form.password"
+          type="password"
+          placeholder="请输入密码"
+          required
+        />
+
+        <label class="field-label">昵称</label>
+        <NeInput v-model="form.nickname" placeholder="选填" />
+
+        <label class="field-label">邮箱</label>
+        <NeInput v-model="form.email" type="email" placeholder="选填" />
+
         <p v-if="error" class="error">{{ error }}</p>
-        <el-form-item>
-          <el-button
-            type="primary"
-            class="submit-btn"
-            :loading="loading"
-            @click="handleRegister"
-          >
+
+        <div class="submit-row">
+          <NeButton :loading="loading" :disabled="loading" @click="handleRegister">
             注册
-          </el-button>
-        </el-form-item>
-      </el-form>
-      <p class="tip">已有账号？<router-link to="/login">去登录</router-link></p>
-    </el-card>
+          </NeButton>
+        </div>
+      </form>
+
+      <p class="tip">
+        已有账号？<router-link to="/login">去登录</router-link>
+      </p>
+    </NeCard>
   </div>
 </template>
 
@@ -42,6 +45,9 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { authApi } from '@/api'
+import NeCard from '@/components/bits2d/NeCard.vue'
+import NeInput from '@/components/bits2d/NeInput.vue'
+import NeButton from '@/components/bits2d/NeButton.vue'
 
 const router = useRouter()
 const form = reactive({ username: '', password: '', nickname: '', email: '' })
@@ -70,21 +76,37 @@ async function handleRegister() {
   justify-content: center;
   padding: 2rem;
 }
-.card {
-  width: 100%;
-  max-width: 360px;
-}
-.card h1 {
-  margin-bottom: 1.5rem;
+.register-title {
   text-align: center;
+  margin-bottom: 1.25rem;
 }
-.submit-btn {
-  width: 100%;
+
+.register-form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.8rem;
 }
+
+.field-label {
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: var(--color-text);
+}
+
+.password-label {
+  margin-top: 0.35rem;
+}
+
 .error {
   color: #dc2626;
   font-size: 0.875rem;
-  margin-top: 0.5rem;
+  margin-top: 0.15rem;
+}
+
+.submit-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.35rem;
 }
 .tip {
   margin-top: 1rem;
